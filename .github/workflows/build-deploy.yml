@@ -96,7 +96,15 @@ jobs:
           org.opencontainers.image.title=Team A Service
           org.opencontainers.image.description=Team A microservice for GitOps POC
           org.opencontainers.image.vendor=Team A
-
+    - name: Generate image tag for Helm
+      id: image-tag
+      run: |
+        # Use the SHA-based tag for predictable updates
+        SHORT_SHA=${GITHUB_SHA:0:7}
+        IMAGE_TAG="main-${SHORT_SHA}"
+        echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "Generated image tag: ${IMAGE_TAG}"
+        
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
@@ -106,22 +114,14 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        platforms: linux/amd64
-
-    - name: Generate image tag for Helm
-      id: image-tag
-      run: |
-        # Use the SHA-based tag for predictable updates
-        SHORT_SHA=${GITHUB_SHA:0:7}
-        IMAGE_TAG="main-${SHORT_SHA}"
-        echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-        echo "Generated image tag: ${IMAGE_TAG}"
-
+        platforms: linux/amd64   
+        
     - name: Update Helm values with new image
       run: |
         # Update values.yaml with new image tag and repository
-        sed -i "s|tag:.*|tag: \"${{ steps.image-tag.outputs.tag }}\"|" helm/values.yaml
+        sed -i "s|tag:.*|tag: \"${{ env.IMAGE_TAG }}\"|" helm/values.yaml
         sed -i "s|repository:.*|repository: ${{ github.repository }}|" helm/values.yaml
+       
         
         # Verify changes
         echo "Updated Helm values:"
