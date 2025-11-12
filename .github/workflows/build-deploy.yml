@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: duggireddy-nsf/team-a-service   # repository must be lowercase
 
 jobs:
   test:
@@ -96,16 +96,14 @@ jobs:
           org.opencontainers.image.title=Team A Service
           org.opencontainers.image.description=Team A microservice for GitOps POC
           org.opencontainers.image.vendor=Team A
-          
-    - name: Generate image tag for Helm
-      id: image-tag
+
+    - name: Generate image tag
       run: |
-        # Use the SHA-based tag for predictable updates
         SHORT_SHA=${GITHUB_SHA:0:7}
         IMAGE_TAG="main-${SHORT_SHA}"
         echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
         echo "Generated image tag: ${IMAGE_TAG}"
-        
+
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
@@ -115,16 +113,12 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        platforms: linux/amd64   
-        
+        platforms: linux/amd64
+
     - name: Update Helm values with new image
       run: |
-        # Update values.yaml with new image tag and repository
         sed -i "s|tag:.*|tag: \"${{ env.IMAGE_TAG }}\"|" helm/values.yaml
         sed -i "s|repository:.*|repository: ${{ github.repository }}|" helm/values.yaml
-       
-        
-        # Verify changes
         echo "Updated Helm values:"
         grep -A 5 "image:" helm/values.yaml
 
@@ -133,17 +127,10 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add helm/values.yaml
-        
-        # Check if there are changes to commit
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
-          git commit -m "🚀 Update image tag to ${{ steps.image-tag.outputs.tag }}
-
-          - Updated by GitHub Actions
-          - Commit: ${{ github.sha }}
-          - Workflow: ${{ github.workflow }}
-          - Run: ${{ github.run_number }}"
+          git commit -m "🚀 Update image tag to ${{ env.IMAGE_TAG }}"
           git push
           echo "Successfully updated Helm values and pushed changes"
         fi
@@ -154,7 +141,7 @@ jobs:
         echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
         echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
         echo "| Service | team-a-service |" >> $GITHUB_STEP_SUMMARY
-        echo "| Image Tag | ${{ steps.image-tag.outputs.tag }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Image Tag | ${{ env.IMAGE_TAG }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Registry | ${{ env.REGISTRY }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Repository | ${{ github.repository }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
@@ -173,9 +160,6 @@ jobs:
       security-events: write
 
     steps:
-    - name: Set short SHA
-      run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
-
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
