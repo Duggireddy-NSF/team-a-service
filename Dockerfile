@@ -17,7 +17,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Runtime stage
-FROM openjdk:17-jre-slim
+FROM openjdk:17-slim
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
