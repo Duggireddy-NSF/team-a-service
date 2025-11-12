@@ -6,10 +6,10 @@ replicaCount: 1
 
 image:
   registry: ghcr.io
-  repository: Duggireddy-NSF/team-a-service
+  repository: ghcr.io/duggireddy-nsf/team-a-service
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "main-d41531c"
+  tag: "main-c807c53"
 
 imagePullSecrets:
   - name: github-packages-secret
