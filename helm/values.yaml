@@ -1,0 +1,141 @@
+# Default values for team-a-service
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: ghcr.io
+  repository: duggireddy-nsf/team-a-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets:
+  - name: github-packages-secret
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: team-a-service.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: team-a-service-tls
+  #    hosts:
+  #      - team-a-service.local
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Spring Boot application configuration
+app:
+  name: team-a-service
+  version: "1.0.0"
+  profile: kubernetes
+
+# Health check configuration
+health:
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Environment variables
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "kubernetes"
+  - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+    value: "health,info,metrics,prometheus"
+  - name: APP_VERSION
+    value: "1.0.0"
+
+# ConfigMap data
+configMap:
+  enabled: false
+  data: {}
+
+# Secret data
+secret:
+  enabled: false
+  data: {}
+
+# Service Monitor for Prometheus
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /actuator/prometheus
+  labels: {}
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1

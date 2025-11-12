@@ -1,0 +1,47 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "team-a-service.fullname" . }}-config
+  labels:
+    {{- include "team-a-service.labels" . | nindent 4 }}
+  annotations:
+    {{- include "team-a-service.annotations" . | nindent 4 }}
+data:
+  {{- with .Values.configMap.data }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  # Default application configuration
+  application.yml: |
+    spring:
+      application:
+        name: {{ .Values.app.name }}
+      profiles:
+        active: {{ .Values.app.profile }}
+    
+    server:
+      port: 8080
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+          base-path: /actuator
+      endpoint:
+        health:
+          show-details: always
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+    
+    app:
+      version: {{ .Values.app.version }}
+      name: {{ .Values.app.name }}
+    
+    logging:
+      level:
+        com.example.teama: INFO
+        org.springframework: INFO
+{{- end }}

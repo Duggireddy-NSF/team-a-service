@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "team-a-service.fullname" . }}
+  labels:
+    {{- include "team-a-service.labels" . | nindent 4 }}
+  annotations:
+    {{- include "team-a-service.annotations" . | nindent 4 }}
+    {{- with .Values.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "team-a-service.selectorLabels" . | nindent 4 }}

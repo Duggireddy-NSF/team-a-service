@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "team-a-service.fullname" . }}
+  labels:
+    {{- include "team-a-service.labels" . | nindent 4 }}
+  annotations:
+    {{- include "team-a-service.annotations" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "team-a-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "team-a-service.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "team-a-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "team-a-service.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          {{- if .Values.health.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.health.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.health.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.health.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- if .Values.configMap.enabled }}
+            - name: CONFIG_MAP_NAME
+              value: {{ include "team-a-service.fullname" . }}-config
+            {{- end }}
+          {{- if or .Values.configMap.enabled .Values.secret.enabled }}
+          envFrom:
+            {{- if .Values.configMap.enabled }}
+            - configMapRef:
+                name: {{ include "team-a-service.fullname" . }}-config
+            {{- end }}
+            {{- if .Values.secret.enabled }}
+            - secretRef:
+                name: {{ include "team-a-service.fullname" . }}-secret
+            {{- end }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
