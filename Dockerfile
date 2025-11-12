@@ -17,7 +17,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Runtime stage
-FROM openjdk:17-slim
+FROM eclipse-temurin:17-jdk
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
