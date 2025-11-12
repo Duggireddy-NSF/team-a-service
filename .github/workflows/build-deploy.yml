@@ -96,13 +96,14 @@ jobs:
           org.opencontainers.image.title=Team A Service
           org.opencontainers.image.description=Team A microservice for GitOps POC
           org.opencontainers.image.vendor=Team A
+          
     - name: Generate image tag for Helm
       id: image-tag
       run: |
         # Use the SHA-based tag for predictable updates
         SHORT_SHA=${GITHUB_SHA:0:7}
         IMAGE_TAG="main-${SHORT_SHA}"
-        echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
         echo "Generated image tag: ${IMAGE_TAG}"
         
     - name: Build and push Docker image
