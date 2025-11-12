@@ -112,7 +112,7 @@ jobs:
       id: image-tag
       run: |
         # Use the SHA-based tag for predictable updates
-        SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+        SHORT_SHA=${GITHUB_SHA:0:7}
         IMAGE_TAG="main-${SHORT_SHA}"
         echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
         echo "Generated image tag: ${IMAGE_TAG}"
@@ -178,7 +178,7 @@ jobs:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ env.SHORT_SHA }}
+        image-ref: ${{ steps.meta.outputs.images }} 
         format: 'sarif'
         output: 'trivy-results.sarif'
 
