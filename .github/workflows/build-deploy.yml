@@ -178,7 +178,7 @@ jobs:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ steps.meta.outputs.images }} 
+        image-ref: ${{ fromJSON('["' + steps.meta.outputs.tags.replaceAll('\n', '","') + '"]')[0] }}
         format: 'sarif'
         output: 'trivy-results.sarif'
 
