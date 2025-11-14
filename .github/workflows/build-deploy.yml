@@ -120,8 +120,34 @@ jobs:
 
       - name: Update Helm values with new image
         run: |
+          # Update image tag
           sed -i "s|tag:.*|tag: \"${{ steps.image-tag.outputs.image_tag }}\"|" helm/values.yaml
+          # Update repository
           sed -i "s|repository:.*|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|" helm/values.yaml
+          echo "Updated Helm values:"
+          grep -A 5 "image:" helm/values.yaml
+
+      - name: Increment Helm chart version
+        run: |
+          # Install yq if not present
+          if ! command -v yq &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y yq
+          fi
+
+          # Read current chart version
+          CURRENT_VERSION=$(yq e '.version' helm/Chart.yaml)
+
+          # Split into major.minor.patch
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          # Increment patch version
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          # Update Chart.yaml
+          yq e -i ".version = \"$NEW_VERSION\"" helm/Chart.yaml
+          echo "Bumped chart version to $NEW_VERSION"
+
           echo "Updated Helm values:"
           grep -A 5 "image:" helm/values.yaml
 
@@ -129,7 +155,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add helm/values.yaml
+          git add helm/values.yaml helm/Chart.yaml
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
