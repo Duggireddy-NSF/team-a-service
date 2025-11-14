@@ -3,7 +3,7 @@ name: team-a-service
 description: A Helm chart for Team A Service - GitOps POC
 type: application
 version: 0.1.0
-appVersion: "1.0.0"
+appVersion: "1.0.1"
 keywords:
   - spring-boot
   - microservice
