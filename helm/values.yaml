@@ -9,7 +9,7 @@ image:
   repository: ghcr.io/duggireddy-nsf/team-a-service
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "main-d2591c0"
+  tag: "main-db87d88"
 
 imagePullSecrets:
   - name: github-packages-secret
