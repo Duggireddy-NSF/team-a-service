@@ -2,7 +2,7 @@ apiVersion: v2
 name: team-a-service
 description: A Helm chart for Team A Service - GitOps POC
 type: application
-version: 0.1.8
+version: 0.1.9
 appVersion: "1.0.3"
 keywords:
   - spring-boot
